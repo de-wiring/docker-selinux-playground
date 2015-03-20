@@ -172,7 +172,7 @@ $ cat /container-data-customera/x
 ```
 
 Gives no error. `id -Z` shows that the vagrant user is "unconfined" and its level/category is "SystemLow-SystemHigh",
-which is s0-s0:c0.c1023 and "beats" s0:c100. We're left with standard linux access rights here unless we define additional selinux users etc. 
+which is s0-s0:c0.c1023 and "beats" s0:c100. We're left with standard linux access rights here unless we define additional selinux users etc.
 
 But for a container-only scenario this should be fine. Confined containers can be launched for individual customers,
 with selinux making sure that even in case of a mistake (i.e. mounting the wrong volume) data is isolated per customer.

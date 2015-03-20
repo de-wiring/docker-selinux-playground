@@ -143,7 +143,8 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 tcp6       0      0 :::49154                :::*                    LISTEN      3208/docker-proxy    system_u:system_r:docker_t:SystemLow
 ```
 
-Suspicious_darwin, nice. The port forwarding is done outside of the container and handled by the docker daemon, so its security label is `docker_t`
+Suspicious_darwin, nice. The port forwarding is done outside of the container and handled by the docker daemon, so its security label is `docker_t`.
+
 Now what happens when mounting a volume?
 
 ```bash
@@ -178,7 +179,7 @@ Other directories carry the `svirt_sandbox_file_t` label, whereas our /mnt is on
 drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:SystemLow .
 dr-xr-xr-x. root root system_u:object_r:root_t:SystemLow ..
 
-docker run -ti -v /container-data:/mnt fedora /bin/bash
+# docker run -ti -v /container-data:/mnt fedora /bin/bash
 bash-4.3# ls -alZ /mnt/
 drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:s0 .
 drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c59,c154 ..
@@ -194,7 +195,7 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c59,c154 ..
 After changing the context of `/container-data` to `svirt_sandbox_file_t`, we're able to access this directory and put files in there.
 They automatically get the same context.
 
-Note the last part of the security label, on the host it's a name like `SystemLow`. This is what mcstransd is doing for us, translatting category numbers into names
+Note the last part of the security label, on the host it's a name like `SystemLow`. This is what mcstransd is doing for us, translating category numbers into names.
 Inside the container we see the plain categories (i.e. `so:c59,c154`). More about that in Part 2.
 
 Where are all these transitions and types defined? Looking at the git repo we clone, we find some files for docker:
@@ -207,3 +208,6 @@ Where are all these transitions and types defined? Looking at the git repo we cl
 ```
 
 as well as the transition from docker_t to svirt_* in `virt.te`. We'll return to policy modules in Part 3.
+
+The [2nd part](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/02_categories.md) shows how to
+isolate volume mounts between containers of different tenants.
