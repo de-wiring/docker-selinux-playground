@@ -1,11 +1,11 @@
 
-yum install -y \
+sudo yum install -y \
 	docker-io \
 	docker-io-vim 
 
-systemctl enable docker || chkconfig -add docker
-systemctl start docker || chkconfig -add docker
+sudo systemctl enable docker || chkconfig -add docker
+sudo systemctl start docker || chkconfig -add docker
 
-docker pull busybox:latest
-docker pull fedora:latest
+sudo docker pull busybox:latest
+sudo docker pull fedora:latest
 

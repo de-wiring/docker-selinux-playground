@@ -1,5 +1,5 @@
 
-yum install -y \
+sudo yum install -y \
 	attr \
 	libselinux-python \
 	mcstrans \
@@ -12,11 +12,15 @@ yum install -y \
 	setroubleshoot-server \
 	setools-console
 
-setenforce 1
+sudo setenforce 1
 
-systemctl enable mcstransd
-systemctl start mcstransd
+sudo systemctl enable mcstransd
+sudo systemctl start mcstransd
 
-#
+# get us the policy source code
 cd /root
-git clone git://git.fedorahosted.org/selinux-policy.git
+sudo git clone git://git.fedorahosted.org/selinux-policy.git
+
+# make ssh/pam more verbose when logging in
+sudo sed -i 's/^\(session.*required.*pam_selinux.so.*\)$/\1 verbose debug/g' /etc/pam.d/sshd
+
