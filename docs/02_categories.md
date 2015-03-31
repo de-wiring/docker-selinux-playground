@@ -40,7 +40,7 @@ s0:c110.c119                   CustomerB
 ```
 
 We'll create data directories for each customer (to be mounted by docker containers), and assign the categories as well
-as the correct domain type for docker containers.
+as the correct domain type for volumes to be used by docker containers.
 
 ```bash
 # mkdir /container-data-customera
@@ -118,7 +118,7 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c110,c119 ..
 
 This could also be done by defining regular linux users and assigning access to the directories. A drawback of doing so is
 that the container would need to be run as a particular user (--user). So that user would have to be defined
-inside the container (useradd ...) and the application needs to support this, i.e. files being writeable/executable by that user. 
+inside the container (useradd ...) and the application needs to support this, i.e. files being writeable/executable by that user.
 But mostly applications define their own application-users (httpd, tomcat, ...), which breaks with a one-distinct-user-per-tenant approach, or
 at least make it more complicated.
 
@@ -142,9 +142,8 @@ drwxr-xr-x. 18 root root 4096 Mar 20 12:56 ..
 bash-4.3# rm y
 ```
 
-The ps output shows that a privileged container has a `s0` sensitivity and is in the `docker_t` domain (not in `svirt_lxc_net_t). The policy for this type seems to allow
-access.
- 
+The ps output shows that a privileged container has a `s0` sensitivity and is in the `docker_t` domain (not in `svirt_lxc_net_t). The policy for this type seems to allow access.
+
 Selinux categories can be applied without defining something in the container, and be combined with linux users
 inside:
 
@@ -200,4 +199,4 @@ which is s0-s0:c0.c1023 and "beats" s0:c100,c109. We're left with standard linux
 But in a container-only scenario this should be fine. Confined containers can be launched for individual customers,
 with selinux making sure that even in case of a mistake (i.e. mounting the wrong volume) data is isolated per customer.
 
-Seems like this is a valid use case for `--security-opt label:level`.
+Seems like isolating tenant data is a valid use case for `--security-opt label:level`.

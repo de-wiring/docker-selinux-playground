@@ -11,6 +11,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vb.customize ["modifyvm", :id, "--memory", "384"]
   end
 
+  config.vm.network "forwarded_port", guest: 9090, host: 46100
+
   # master
   config.vm.define 'fedoraselinux', primary: true do |m|
 	  m.vm.provision 'shell', path: 'provision.d/01_os.sh'
