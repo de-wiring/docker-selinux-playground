@@ -82,8 +82,7 @@ The policy module start with a policy_module definition, i just name it after th
 policy_module(container, 1.0);
 ```
 
-Then follows the code from `virt.te`, but changing the identifier `svirt_lxc_net_t` to
-- say - `mycontainer_t`. I know this name says next to nothing, but for a first test it should
+Then follows the code from `virt.te`, but changing the identifier `svirt_lxc_net_t` to, lets say, `mycontainer_t`. I know this name says next to nothing, but for a first test it should
 be ok.
 
 Since the module uses other types and attributes, i declared them at the beginning:
@@ -106,8 +105,7 @@ typeattribute mycontainer_t sandbox_net_domain;
 (...)
 ```
 
-.fc and .if files are optional, so let's compile it. The policy code includes
-a Makefile:
+.fc and .if files are optional, so let's compile it. The policy code of package `selinux-policy-devel` includes a Makefile:
 
 ```bash
 # make -f /usr/share/selinux/devel/Makefile

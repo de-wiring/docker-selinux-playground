@@ -142,7 +142,7 @@ drwxr-xr-x. 18 root root 4096 Mar 20 12:56 ..
 bash-4.3# rm y
 ```
 
-The ps output shows that a privileged container has a `s0` sensitivity and is in the `docker_t` domain (not in `svirt_lxc_net_t). The policy for this type seems to allow access.
+The ps output shows that a privileged container has a `s0` sensitivity and is in the `docker_t` domain (not in `svirt_lxc_net_t`). The policy for this type seems to allow access.
 
 Selinux categories can be applied without defining something in the container, and be combined with linux users
 inside:
@@ -173,7 +173,7 @@ drwxr-xr-x. 18 root root 4096 Mar 20 06:57 ..
 -rw-r--r--.  1 root root    0 Mar 20 06:51 y
 ```
 
-Probably our selinux categories are fine, but on a standard linux DAC level, this directory is
+Probably our selinux categories are fine, but on a regular linux DAC level, this directory is
 accessible to all, but writeable to root only. So we'd have to assign the regular
 linux access rights accordingly, i.e. by making it group-writable to root group (or some other
   group defined inside the container).
@@ -200,3 +200,7 @@ But in a container-only scenario this should be fine. Confined containers can be
 with selinux making sure that even in case of a mistake (i.e. mounting the wrong volume) data is isolated per customer.
 
 Seems like isolating tenant data is a valid use case for `--security-opt label:level`.
+
+The [3rd part](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/03_custom_domain_types.md) shows how to create
+custom domain types for containers.
+
