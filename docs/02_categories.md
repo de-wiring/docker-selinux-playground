@@ -122,6 +122,74 @@ inside the container (useradd ...) and the application needs to support this, i.
 But mostly applications define their own application-users (httpd, tomcat, ...), which breaks with a one-distinct-user-per-tenant approach, or
 at least make it more complicated.
 
+What happens when taking over volumes from other containers with --volumes-from?
+Lets create a container `volcont1` with Category of customer a, mounting directory from host:
+
+```bash
+# docker run -tdi --security-opt label:level:s0:c100,c109 -v /container-data-customera:/mnt --name volcont1 fedora /bin/bash
+
+bash-4.3# cd /mnt
+bash-4.3# echo "123" >x
+bash-4.3# ls -alZ
+drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:s0:c100,c109 .
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
+-rw-r--r--. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 x
+
+# <CTRL-P> + <CTRL-Q>
+```
+
+A new container mounting volumes from `volcont1` without proper categories is not able to access it:
+
+```bash
+# docker run -ti --volumes-from volcont1 fedora /bin/bash
+bash-4.3# cd /mnt
+bash: cd: /mnt: Permission denied
+bash-4.3# exit
+```
+
+A new container with the same category is able to access it:
+
+```bash
+# docker run -ti --security-opt label:level:s0:c100,c109 --volumes-from volcont1 fedora /bin/bash
+bash-4.3# cd /mnt
+bash-4.3# cat x
+123
+bash-4.3# echo "456" >y
+bash-4.3# ls -alZ
+drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:s0:c100,c109 .
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
+-rw-r--r--. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 x
+-rw-r--r--. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 y
+bash-4.3# exit
+```
+
+Unfortunately this does not work out well when using a volume created by docker daemon, i.e. `-v /data`. Docker creates
+a directory on the host but it does not assign the MCS category to it. Inside a container we're not allowed to change
+its category, probably because its the mount point we're trying to change:
+
+```bash
+# docker run -tdi --security-opt label:level:s0:c100,c109 -v /data --name volcont1 fedora /bin/bash
+c28cfbfc35bf459bbb5266de5f6fd220cf90ef51c31dff088102e9a8487841d6
+
+# docker attach volcont1
+bash-4.3# cd /data
+bash-4.3# ls -alZ
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0 .
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
+
+bash-4.3# chcon -R --range s0:c100,c109 .
+chcon: failed to change context of '.' to 'system_u:object_r:svirt_sandbox_file_t:s0:c100,c109': Permission denied
+
+bash-4.3# touch x
+bash-4.3# ls -alZ
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0 .
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
+-rw-r--r--. root root system_u:object_r:svirt_sandbox_file_t:s0 x
+```
+
+New files created in the container will have the security label of the parent directory, and that's not what we want.
+Additionally we're not allowed to `chcon` our own files.
+
 What happens in Privileged containers?
 
 ```bash
@@ -203,4 +271,3 @@ Seems like isolating tenant data is a valid use case for `--security-opt label:l
 
 The [3rd part](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/03_custom_domain_types.md) shows how to create
 custom domain types for containers.
-
