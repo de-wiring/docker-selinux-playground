@@ -8,6 +8,7 @@
 /test/tmp/
 /test/version_tmp/
 /tmp/
+tmp/
 
 ## Specific to RubyMotion:
 .dat*
@@ -34,3 +35,9 @@ build/
 .rvmrc
 
 .vagrant/
+
+# ignore compile selinux policy modules
+*.pp
+*.fc
+*.if
+

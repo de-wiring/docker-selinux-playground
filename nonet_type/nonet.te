@@ -1,0 +1,68 @@
+policy_module(nonent_container, 1.0);
+
+gen_require(`
+  type svirt_sandbox_file_t;
+  type virt_lxc_var_run_t;
+  attribute sandbox_net_domain;
+')
+
+########################################
+#
+# mycontainer_nonet_t local policy
+#
+virt_sandbox_domain_template(mycontainer_nonet)
+
+#typeattribute mycontainer_nonet_t sandbox_net_domain;
+
+allow mycontainer_nonet_t self:capability { kill setuid setgid ipc_lock chown dac_read_search dac_override fowner fsetid sys_chroot sys_nice sys_ptrace };
+dontaudit mycontainer_nonet_t self:capability2 block_suspend;
+allow mycontainer_nonet_t self:process { execstack execmem };
+
+tunable_policy(`virt_sandbox_use_sys_admin',`
+	allow mycontainer_nonet_t self:capability sys_admin;
+')
+
+tunable_policy(`virt_sandbox_use_netlink',`
+	allow mycontainer_nonet_t self:netlink_socket create_socket_perms;
+	allow mycontainer_nonet_t self:netlink_tcpdiag_socket create_netlink_socket_perms;
+	allow mycontainer_nonet_t self:netlink_kobject_uevent_socket create_socket_perms;
+', `
+	logging_dontaudit_send_audit_msgs(mycontainer_nonet_t)
+')
+
+allow mycontainer_nonet_t virt_lxc_var_run_t:dir list_dir_perms;
+allow mycontainer_nonet_t virt_lxc_var_run_t:file read_file_perms;
+
+kernel_read_irq_sysctls(mycontainer_nonet_t)
+kernel_read_messages(mycontainer_nonet_t)
+
+dev_read_sysfs(mycontainer_nonet_t)
+dev_getattr_mtrr_dev(mycontainer_nonet_t)
+dev_read_rand(mycontainer_nonet_t)
+dev_read_urand(mycontainer_nonet_t)
+
+files_read_kernel_modules(mycontainer_nonet_t)
+
+fs_noxattr_type(svirt_sandbox_file_t)
+# Do we actually need these?
+fs_mount_cgroup(mycontainer_nonet_t)
+fs_manage_cgroup_dirs(mycontainer_nonet_t)
+fs_manage_cgroup_files(mycontainer_nonet_t)
+# Needed for docker
+fs_unmount_xattr_fs(mycontainer_nonet_t)
+
+term_pty(svirt_sandbox_file_t)
+
+auth_use_nsswitch(mycontainer_nonet_t)
+
+rpm_read_db(mycontainer_nonet_t)
+
+logging_send_syslog_msg(mycontainer_nonet_t)
+
+tunable_policy(`virt_sandbox_use_audit',`
+	logging_send_audit_msgs(mycontainer_nonet_t)
+')
+
+userdom_use_user_ptys(mycontainer_nonet_t)
+
+
