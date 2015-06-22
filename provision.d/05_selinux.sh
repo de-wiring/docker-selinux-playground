@@ -5,6 +5,7 @@ sudo yum install -y \
 	mcstrans \
 	policycoreutils \
 	policycoreutils-python \
+	policycoreutils-newrole \
 	selinux-policy-devel \
 	selinux-policy-targeted \
 	selinux-policy-sandbox \
