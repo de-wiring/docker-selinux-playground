@@ -55,7 +55,7 @@ drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:s0:c110,c119 co
 Starting a container and mounting a customer directory yields:
 
 ```bash
-# docker run -ti -v /container-data-customera:/mnt fedora /bin/bash
+# docker run -ti -v /container-data-customera:/mnt fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash: cd: /mnt: Permission denied
 
@@ -76,7 +76,7 @@ The `--security-opt` switch offers a `label:level` mode where we're able to spec
 should have:
 
 ```bash
-# docker run -ti --security-opt label:level:s0:c100,c109 -v /container-data-customera:/mnt fedora /bin/bash
+# docker run -ti --security-opt label:level:s0:c100,c109 -v /container-data-customera:/mnt fedora:21 /bin/bash
 
 bash-4.3# ps -Z
 LABEL                             PID TTY          TIME CMD
@@ -99,7 +99,7 @@ put files there. So our container is a "CustomerA" container.
 Lets see what happens if we start a "CustomerB" container with level s0:c110 and access "CustomerA" data:
 
 ```bash
-# docker run -ti --security-opt label:level:s0:c110,c119 -v /container-data-customera:/mnt fedora /bin/bash
+# docker run -ti --security-opt label:level:s0:c110,c119 -v /container-data-customera:/mnt fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash: cd: /mnt: Permission denied
 ```
@@ -107,7 +107,7 @@ bash: cd: /mnt: Permission denied
 Bäm, doesn't work. However, using Category `s0:c110,c119` on its CustomerBs `/container-data-customerb` is fine:
 
 ```bash
-# docker run -ti --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora /bin/bash
+# docker run -ti --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash-4.3# touch y
 bash-4.3# ls -alZ
@@ -126,7 +126,7 @@ What happens when taking over volumes from other containers with --volumes-from?
 Lets create a container `volcont1` with Category of customer a, mounting directory from host:
 
 ```bash
-# docker run -tdi --security-opt label:level:s0:c100,c109 -v /container-data-customera:/mnt --name volcont1 fedora /bin/bash
+# docker run -tdi --security-opt label:level:s0:c100,c109 -v /container-data-customera:/mnt --name volcont1 fedora:21 /bin/bash
 
 bash-4.3# cd /mnt
 bash-4.3# echo "123" >x
@@ -141,7 +141,7 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
 A new container mounting volumes from `volcont1` without proper categories is not able to access it:
 
 ```bash
-# docker run -ti --volumes-from volcont1 fedora /bin/bash
+# docker run -ti --volumes-from volcont1 fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash: cd: /mnt: Permission denied
 bash-4.3# exit
@@ -150,7 +150,7 @@ bash-4.3# exit
 A new container with the same category is able to access it:
 
 ```bash
-# docker run -ti --security-opt label:level:s0:c100,c109 --volumes-from volcont1 fedora /bin/bash
+# docker run -ti --security-opt label:level:s0:c100,c109 --volumes-from volcont1 fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash-4.3# cat x
 123
@@ -168,7 +168,7 @@ a directory on the host but it does not assign the MCS category to it. Inside a 
 its category, probably because its the mount point we're trying to change:
 
 ```bash
-# docker run -tdi --security-opt label:level:s0:c100,c109 -v /data --name volcont1 fedora /bin/bash
+# docker run -tdi --security-opt label:level:s0:c100,c109 -v /data --name volcont1 fedora:21 /bin/bash
 c28cfbfc35bf459bbb5266de5f6fd220cf90ef51c31dff088102e9a8487841d6
 
 # docker attach volcont1
@@ -193,7 +193,7 @@ Additionally we're not allowed to `chcon` our own files.
 What happens in Privileged containers?
 
 ```bash
-# docker run -ti --privileged -v /container-data-customerb:/mnt fedora /bin/bash
+# docker run -ti --privileged -v /container-data-customerb:/mnt fedora:21 /bin/bash
 
 bash-4.3# ps -Z
 LABEL                             PID TTY          TIME CMD
@@ -216,7 +216,7 @@ Selinux categories can be applied without defining something in the container, a
 inside:
 
 ```bash
-# docker run -ti --user 1494 --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora /bin/bash
+# docker run -ti --user 1494 --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora:21 /bin/bash
 
 bash-4.3$ id
 uid=1494 gid=0(root)
@@ -248,7 +248,7 @@ linux access rights accordingly, i.e. by making it group-writable to root group 
 
 ```bash
 # chmod -R g+w /container-data-customerb
-# docker run -ti --user 1494 --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora /bin/bash
+# docker run -ti --user 1494 --security-opt label:level:s0:c110,c119 -v /container-data-customerb:/mnt fedora:21 /bin/bash
 bash-4.3$ touch /mnt/v
 bash-4.3$ ls -alZ /mnt/v
 -rw-r--r--. 1494 root system_u:object_r:svirt_sandbox_file_t:s0:c110,c119 /mnt/v

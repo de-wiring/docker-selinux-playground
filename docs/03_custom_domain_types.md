@@ -150,7 +150,7 @@ container	1.0
 Lets try and start a container with this type:
 
 ```bash
-# docker run -ti --security-opt label:type:mycontainer_t fedora /bin/bash
+# docker run -ti --security-opt label:type:mycontainer_t fedora:21 /bin/bash
 
 bash-4.3# ps -Z
 LABEL                             PID TTY          TIME CMD
@@ -207,7 +207,7 @@ A plain fedora:21 image does not contain all network-related tools, so we instal
 them (before disabling the network :)
 
 ```bash
-# docker run -ti fedora /bin/bash
+# docker run -ti fedora:21 /bin/bash
 # yum install net-tools nc6 iputils
 # <CTRL-P> + <CTRL-Q>
 # docker commit 4edbb116d7bb fedora-nettest

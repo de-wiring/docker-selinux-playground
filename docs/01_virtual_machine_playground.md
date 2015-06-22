@@ -56,12 +56,25 @@ It's running in the `docker_t` domain, role `system_r`. So that process is confi
 that is described by the selinux policy for Docker. Note also the docker switch `--selinux-enabled`,
 this is set automatically in `/etc/sysconfig/docker`.
 
-`ls` understands this as well, lets look at the docker socket:
+On systemd with a custom docker installation, this is not necessarily the case. If not, take a look at
+`/usr/lib/systemd/system/docker.service` an add `--selinux-enabled` to the ExecStart= line if necessary,
+reload and restart service:
+
+```bash
+~# grep ^ExecStart /usr/lib/systemd/system/docker.service
+ExecStart=/usr/bin/docker -d -H fd:// --selinux-enabled
+~# systemctl daemon-reload
+~# systemctl restart docker.service
+```
+
+`ls` understands `-Z` as well, lets look at the docker socket:
 
 ```bash
 # ls -alZ /var/run/docker.sock
 srw-rw----. root root system_u:object_r:docker_var_run_t:SystemLow /var/run/docker.sock
 ```
+
+It's of type `docker_var_run_t`, so it's treated in a special way by selinux.
 
 To find out more on docker_t, we can use `seinfo`:
 
@@ -88,7 +101,7 @@ Lets start a container and look around. The VM provision script automatically pu
 as well as a busybox.
 
 ```bash
-# docker run -ti fedora /bin/bash
+# docker run -ti fedora:21 /bin/bash
 bash-4.3# ps -Z
 LABEL                             PID TTY          TIME CMD
 system_u:system_r:svirt_lxc_net_t:s0:c281,c501 1 ? 00:00:00 bash
@@ -132,7 +145,7 @@ We've seen the -Z option on ps when looking at the docker daemon process and a c
 netstat:
 
 ```bash
-# docker run -tdi -p 8080 fedora /bin/bash
+# docker run -tdi -p 8080 fedora:21 /bin/bash
 748e0d6c49e002e4d73b889749b564b89dce78cdacb8943530be1ef11a307c97
 
 # docker ps
@@ -143,13 +156,13 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 tcp6       0      0 :::49154                :::*                    LISTEN      3208/docker-proxy    system_u:system_r:docker_t:SystemLow
 ```
 
-Suspicious_darwin, nice. The port forwarding is done outside of the container and handled by the docker daemon, so its security label is `docker_t`.
+The port forwarding is done outside of the container and handled by the docker daemon, so its security label is `docker_t`.
 
-Now what happens when mounting a volume?
+Now what happens when mounting a volume? 
 
 ```bash
 # mkdir /container-data
-# docker run -ti -v /container-data:/mnt fedora /bin/bash
+# docker run -ti -v /container-data:/mnt fedora:21 /bin/bash
 bash-4.3# cd /mnt
 bash-4.3# ls -al
 ls: cannot open directory .: Permission denied
@@ -179,7 +192,7 @@ Other directories carry the `svirt_sandbox_file_t` label, whereas our /mnt is on
 drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:SystemLow .
 dr-xr-xr-x. root root system_u:object_r:root_t:SystemLow ..
 
-# docker run -ti -v /container-data:/mnt fedora /bin/bash
+# docker run -ti -v /container-data:/mnt fedora:21 /bin/bash
 bash-4.3# ls -alZ /mnt/
 drwxr-xr-x. root root unconfined_u:object_r:svirt_sandbox_file_t:s0 .
 drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c59,c154 ..
@@ -194,6 +207,33 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c59,c154 ..
 
 After changing the context of `/container-data` to `svirt_sandbox_file_t`, we're able to access this directory and put files in there.
 They automatically get the same context.
+
+~~Note: Starting from docker 1.7.0~~, the `-v` argument understands a special parameter suffix, `-z`. Using this, the docker daemon automatically assigns the
+right label to the volume being mounted:
+
+```bash
+~# rm -fr /container-data/
+~# mkdir /container-data
+~# ls -alZ /container-data/
+drwxr-xr-x. root root unconfined_u:object_r:default_t:SystemLow .
+dr-xr-xr-x. root root system_u:object_r:root_t:SystemLow ..
+
+# its default_t
+
+~# docker run -ti -v /container-data:/mnt:z fedora:21 /bin/bash
+bash-4.3# cd /mnt
+bash-4.3# ls -alZ
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0 .
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c29,c960 ..
+bash-4.3# exit
+exit
+
+[root@localhost ~]# ls -alZ /container-data/
+drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:SystemLow .
+dr-xr-xr-x. root root system_u:object_r:root_t:SystemLow ..
+
+# now its svirt_sandbox_file_t
+```
 
 Note the last part of the security label, on the host it's a name like `SystemLow`. This is what mcstransd is doing for us, translating category numbers into names.
 Inside the container we see the plain categories (i.e. `so:c59,c154`). More about that in Part 2.

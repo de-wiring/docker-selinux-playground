@@ -12,6 +12,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.network "forwarded_port", guest: 9090, host: 46100
+  config.vm.network "forwarded_port", guest: 2375, host: 46101
 
   # master
   config.vm.define 'fedoraselinux', primary: true do |m|

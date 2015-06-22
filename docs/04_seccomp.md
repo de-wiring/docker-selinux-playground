@@ -40,7 +40,7 @@ Execution Driver: lxc-1.0.7
 One thing we can observe is that containers are confined in a different domain, and without categories:
 
 ```bash
-# docker run -ti --rm fedora /bin/bash
+# docker run -ti --rm fedora:21 /bin/bash
 bash-4.3# ps -Z
 LABEL                             PID TTY          TIME CMD
 system_u:system_r:spc_t:s0          1 ?        00:00:00 bash
@@ -84,7 +84,7 @@ the perl script.
 This file is activated with an additional `--lcx-conf` setting:
 
 ```
-# docker run -tdi --lxc-conf="lxc.seccomp=/root/seccomp-sample" fedora /bin/bash
+# docker run -tdi --lxc-conf="lxc.seccomp=/root/seccomp-sample" fedora:21 /bin/bash
 09f7e3b24ff4bafc2bbe2e6b05a9ed7181e3637810570c0bea4cac5976ad6c23
 
 # docker inspect 09f
@@ -102,12 +102,12 @@ This file is activated with an additional `--lcx-conf` setting:
 Let's do a test and try to chroot into a new shell:
 
 ```bash
-# docker run -ti --lxc-conf="lxc.seccomp=/root/seccomp-sample" fedora /bin/bash
+# docker run -ti --lxc-conf="lxc.seccomp=/root/seccomp-sample" fedora:21 /bin/bash
 bash-4.3# chroot / /bin/bash
 Bad system call
 ```
 
-So we're not allowed to chroot any more, the system call is rejected. Even if we run `--privileged`.
+So we're not allowed to chroot any more, this system call is rejected. Even if we run `--privileged`.
 
 Another example for changing file modes. Let's copy `mkseccomp.sample` into `no-chmod-seccomp` and comment out
 chmod, fchmod and fchmodat. Compile and test:
@@ -120,7 +120,7 @@ chmod, fchmod and fchmodat. Compile and test:
 
 # ./mkseccomp.pl <no-chmod.sample >/root/no-chmod-seccomp
 
-# docker run -ti --lxc-conf="lxc.seccomp=/root/no-chmod-seccomp" fedora /bin/bash
+# docker run -ti --lxc-conf="lxc.seccomp=/root/no-chmod-seccomp" fedora:21 /bin/bash
 bash-4.3# touch x
 bash-4.3# ls -al x
 -rw-r--r--. 1 root root 0 Apr 17 04:52 x

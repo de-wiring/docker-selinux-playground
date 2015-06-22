@@ -7,5 +7,5 @@ sudo systemctl enable docker || chkconfig -add docker
 sudo systemctl start docker || chkconfig -add docker
 
 sudo docker pull busybox:latest
-sudo docker pull fedora:latest
+sudo docker pull fedora:21
 
