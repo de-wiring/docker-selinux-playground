@@ -163,8 +163,8 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c100,c109 ..
 bash-4.3# exit
 ```
 
-Unfortunately this does not work out well when using a volume created by docker daemon, i.e. `-v /data`. Docker creates
-a directory on the host but it does not assign the MCS category to it. Inside a container we're not allowed to change
+Unfortunately this does not work out well for docker versions < 1.7.0 when using a volume created by docker daemon, i.e. `-v /data`. Docker creates
+a directory on the host but it does not assign the MCS category to it. (Starting from docker 1.7.0 this is fixed because of :Z option being introduced to the --volume parameter). Docker 1.6: Inside a container we're not allowed to change
 its category, probably because its the mount point we're trying to change:
 
 ```bash
