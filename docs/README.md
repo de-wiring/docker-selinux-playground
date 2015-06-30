@@ -12,7 +12,7 @@ of what's possible, but at least it might get you acquainted with some concepts.
 
 It is divided in three parts:
 
-* [Moving around the Playgrounds' virtual machine](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/01_virtual_machine_playground.md)
+* [Moving around the Playgrounds virtual machine, get to know some selinux](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/01_virtual_machine_playground.md)
 * [Setting MCS categories to isolate containers with mounted volumes](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/02_categories.md)
 * [Creating custom selinux types for containers](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/03_custom_domain_types.md)
 * [Combining selinux and seccomp on lxc-driver](https://github.com/aschmidt75/docker-selinux-playground/blob/master/docs/04_seccomp.md)
