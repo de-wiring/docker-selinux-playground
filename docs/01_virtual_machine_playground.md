@@ -208,7 +208,7 @@ drwxr-xr-x. root root system_u:object_r:svirt_sandbox_file_t:s0:c59,c154 ..
 After changing the context of `/container-data` to `svirt_sandbox_file_t`, we're able to access this directory and put files in there.
 They automatically get the same context.
 
-**Note: Starting from docker 1.7.0**, the `-v` argument understands a special parameter suffix, `-z`. Using this, the docker daemon automatically assigns the
+**Note: Starting from docker 1.7.0**, the `-v` argument understands a special parameter suffix, `:z`. Using this, the docker daemon automatically assigns the
 right label to the volume being mounted:
 
 ```bash
